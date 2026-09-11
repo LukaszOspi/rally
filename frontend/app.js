@@ -1025,7 +1025,9 @@ function init() {
   initMap();
   $$(".dropdown").forEach(wireDropdown);
 
-  $$("#filters select, #filters input").forEach((el) => {
+  // #f-sort sits in the list header, outside #filters, so it needs the same
+  // binding — the native picker on mobile has no Apply button to fall back on.
+  $$("#filters select, #filters input, #f-sort").forEach((el) => {
     el.addEventListener("change", applyFilters);
   });
 
