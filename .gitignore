@@ -1,0 +1,14 @@
+# Secrets — the deployed .env lives only on the server.
+.env
+
+# SQLite store (kept in a Docker volume, never in the tree).
+*.db
+*.db-wal
+*.db-shm
+
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local reference material, excluded from the image and the deploy rsync.
+DOCUMENTS/

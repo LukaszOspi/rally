@@ -1,0 +1,78 @@
+services:
+  api:
+    build: ./backend
+    container_name: rally-api
+    restart: unless-stopped
+    environment:
+      - RALLY_DB=/data/rally.db
+      - CRAWL_INTERVAL_MINUTES=${CRAWL_INTERVAL_MINUTES:-60}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_BOT_USERNAME=${TELEGRAM_BOT_USERNAME:-}
+      - PUBLIC_URL=${PUBLIC_URL:-https://rally.ospi.link}
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-}
+    volumes:
+      - rally_data:/data
+    networks:
+      - internal
+      - rally-proxy
+    # This box is shared with several unrelated apps. These ceilings mean a bug
+    # or an abusive client here cannot starve them of memory, PIDs or disk.
+    mem_limit: 512m
+    memswap_limit: 512m
+    pids_limit: 128
+    cpus: 1.0
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  frontend:
+    image: nginx:alpine
+    container_name: rally-frontend
+    restart: unless-stopped
+    depends_on:
+      - api
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./infra/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - internal
+      - rally-proxy
+    mem_limit: 128m
+    memswap_limit: 128m
+    pids_limit: 64
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # nginx needs these two to bind :80 and drop to its worker user.
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
+      - NET_BIND_SERVICE
+    read_only: true
+    tmpfs:
+      - /var/cache/nginx:size=16m
+      - /var/run:size=1m
+      - /tmp:size=8m
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    # No ports published — Caddy terminates TLS and routes to these containers.
+
+volumes:
+  rally_data:
+
+networks:
+  internal:
+  # Shared only with Caddy, not with the other apps on this host. Keeps a
+  # compromise here from reaching ospitality/adhd/vacation/fuerstwiacek.
+  rally-proxy:
+    external: true

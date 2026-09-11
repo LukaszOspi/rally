@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rally Finder — one-way campervans across Europe</title>
+  <meta name="description" content="Every Roadsurfer Rally one-way campervan route in Europe on one map, with exact dates, pickup and drop-off details and live availability.">
+  <link rel="stylesheet" href="vendor/leaflet.css">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚐</text></svg>">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark">🚐</span>
+    <div>
+      <h1>Rally Finder</h1>
+      <p class="tagline">One-way campervans across Europe · flat €129 for up to 7 days</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <dl class="stats" id="stats"></dl>
+    <button class="btn btn-primary" id="btn-alert">
+      <span aria-hidden="true">🔔</span> Create alert
+    </button>
+  </div>
+</header>
+
+<div class="filters" id="filters">
+  <div class="field">
+    <label for="f-from-country">From country</label>
+    <select id="f-from-country"><option value="">Any country</option></select>
+  </div>
+  <div class="field">
+    <label for="f-from">From station</label>
+    <select id="f-from"><option value="">Any departure</option></select>
+  </div>
+  <div class="field">
+    <label for="f-to">To station</label>
+    <select id="f-to"><option value="">Any destination</option></select>
+  </div>
+  <div class="field">
+    <label for="f-earliest">Depart after</label>
+    <input type="date" id="f-earliest">
+  </div>
+  <div class="field">
+    <label for="f-latest">Depart before</label>
+    <input type="date" id="f-latest">
+  </div>
+  <div class="field field-wide">
+    <label for="f-models-toggle">Camper</label>
+    <details class="dropdown" id="f-models-dd">
+      <summary id="f-models-toggle">Any camper</summary>
+      <div class="dropdown-panel" id="f-models"></div>
+    </details>
+  </div>
+  <div class="field field-checks">
+    <label class="check">
+      <input type="checkbox" id="f-new"> New in 24h
+    </label>
+    <label class="check">
+      <input type="checkbox" id="f-wide"> Flexible window only
+    </label>
+    <label class="check" title="Windows Roadsurfer advertises but the booking step refuses.">
+      <input type="checkbox" id="f-dead"> Show dead ends
+    </label>
+  </div>
+  <button class="btn btn-ghost" id="btn-reset">Reset</button>
+</div>
+
+<main class="layout">
+  <section class="list-pane">
+    <div class="list-head">
+      <h2 id="result-count">Loading…</h2>
+      <label class="sort">
+        Sort
+        <select id="f-sort">
+          <option value="date">Departure date</option>
+          <option value="new">Newest first</option>
+          <option value="distance">Distance (longest)</option>
+          <option value="distance-asc">Distance (shortest)</option>
+          <option value="days">Window length</option>
+          <option value="from">Departure city</option>
+          <option value="to">Destination city</option>
+        </select>
+      </label>
+    </div>
+    <div id="focus-bar" class="focus-bar" hidden></div>
+    <div id="list" class="list"></div>
+  </section>
+
+  <section class="map-pane">
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="map-legend">
+        <span><i class="dot dot-start"></i> Departure</span>
+        <span><i class="dot dot-end"></i> Destination</span>
+        <span class="legend-hint">Click a point for its connections</span>
+      </div>
+    </div>
+    <!-- Mobile only: tapping a point shows its trips here, under the map,
+         so you never have to switch tabs to see what you just tapped. -->
+    <div class="map-results" id="map-results"></div>
+  </section>
+</main>
+
+<div class="mobile-toggle">
+  <button data-view="list" class="active">List</button>
+  <button data-view="map">Map</button>
+</div>
+
+<!-- Offer detail -->
+<div class="modal-backdrop" id="detail-backdrop" hidden>
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <button class="modal-close" data-close="detail" aria-label="Close">×</button>
+    <div id="detail-body"></div>
+  </div>
+</div>
+
+<!-- Saved search -->
+<div class="modal-backdrop" id="alert-backdrop" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="alert-title">
+    <button class="modal-close" data-close="alert" aria-label="Close">×</button>
+    <div id="alert-body">
+      <h2 id="alert-title">Create an alert</h2>
+      <p class="muted">
+        I check every hour. When a route matching these criteria appears,
+        you get a Telegram message.
+      </p>
+      <div class="field">
+        <label for="a-name">Name</label>
+        <input type="text" id="a-name" placeholder="e.g. Spain to Munich in September" maxlength="120">
+      </div>
+      <div class="alert-criteria">
+        <p class="criteria-summary" id="a-summary"></p>
+        <p class="muted small">
+          Taken from the filters above. Close this, adjust the filters, and reopen
+          to change them.
+        </p>
+      </div>
+      <div class="field">
+        <label>Campers to watch for</label>
+        <div class="model-grid" id="a-models"></div>
+        <p class="muted small">Leave all unticked to be alerted about any camper.</p>
+      </div>
+      <p class="preview-line" id="a-preview"></p>
+      <button class="btn btn-primary btn-block" id="a-create">Create alert</button>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/leaflet.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
