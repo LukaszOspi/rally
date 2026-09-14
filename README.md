@@ -118,26 +118,28 @@ infra/nginx.conf  static file serving
 
 ### DNS
 
-`rally.ospi.link` needs an **A record → 116.203.203.26** in Route 53
-(zone `ospi.link`). Caddy is already configured and retries certificate
-issuance for 30 days, so HTTPS starts working within a minute of the record
-propagating — no redeploy needed.
+The public hostname needs an **A record → your server's IP** in whatever DNS
+you use. Caddy is configured to retry certificate issuance for 30 days, so
+HTTPS starts working within a minute of the record propagating — no redeploy
+needed.
 
 ### Telegram
 
-Alerts are inert until a bot exists. `/opt/rally-finder/.env` already exists
-with a generated `ADMIN_TOKEN`; only the two Telegram lines are blank.
+Alerts are inert until a bot exists. Copy `.env.example` to `.env` on the
+server and fill it in — `ADMIN_TOKEN` should be a freshly generated random
+string (`openssl rand -hex 32`), and the two Telegram lines come from the
+steps below.
 
 1. In Telegram, open [@BotFather](https://t.me/BotFather) and send `/newbot`.
 2. Give it a display name (anything, e.g. `Rally Finder`) then a username that
    must end in `bot` (e.g. `ospi_rally_bot`).
 3. BotFather replies with a token like `8123456789:AAH...`. Put both values in
-   `/opt/rally-finder/.env`:
+   the server's `.env`:
    ```
    TELEGRAM_BOT_TOKEN=8123456789:AAH...
    TELEGRAM_BOT_USERNAME=ospi_rally_bot
    ```
-4. `cd /opt/rally-finder && docker compose up -d`
+4. `docker compose up -d` in the deployment directory
 5. Confirm: `docker logs rally-api 2>&1 | grep telegram` should say
    `telegram bot @<name> connected`, not `telegram disabled`.
 
@@ -188,7 +190,7 @@ database is unreachable both by name and by raw IP, while Caddy still routes
 to `rally-api` and `rally-frontend` normally.
 
 ```
-infra-caddy-1 ──┬── proxy        → ospitality, adhd, vacation, fuerstwiacek…
+infra-caddy-1 ──┬── proxy        → the host's other apps…
                 └── rally-proxy  → rally-api, rally-frontend   (isolated)
 ```
 
